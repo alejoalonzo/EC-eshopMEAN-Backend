@@ -7,11 +7,17 @@ const router = express.Router();
 
 //-----------------------------------------------READ ALL---------------------
 router.get(`/`, async (req, res) => {
-  const productList = await Product.find();
+  //filter by category
+  let filter = {};
+  if (req.query.categories) {
+    filter = { category: req.query.categories.split(",") };
+  }
+  console.log(filter);
+  const productList = await Product.find(filter).populate("category");
   //if I want a response with only name and image without id for instance
   //I have to add the SELECT method at the end
   //const productList = await Product.find().select(name image -_id);
-
+  //console.log(filter);
   if (!productList) {
     res.status(500).json({ succes: false });
   }
@@ -27,6 +33,32 @@ router.get(`/:id`, async (req, res) => {
     res.status(500).json({ succes: false });
   }
   res.send(product);
+});
+
+//-----------------------------------------------GET COUNTS---------------------
+router.get(`/get/count`, async (req, res) => {
+  const productCount = await Product.countDocuments()
+    .then(count => {
+      if (count) {
+        return res.status(200).json({ productCount: count });
+      } else {
+        return res.status(500).json({ succes: false });
+      }
+    })
+    .catch(err => {
+      return res.status(400).json({ succes: false, error: err });
+    });
+});
+
+//-----------------------------------------------GET FEATURED---------------------
+router.get(`/get/featured/:count`, async (req, res) => {
+  // the next like works like IF and ELSE
+  const count = req.params.count ? req.params.count : 0;
+  const products = await Product.find({ isFeatured: true }).limit(+count);
+  if (!products) {
+    res.status(500).json({ succes: false });
+  }
+  res.send(products);
 });
 
 //-----------------------------------------------CREATE---------------------
