@@ -3,14 +3,35 @@ const { OrderItem } = require("../models/order-item");
 const express = require("express");
 const router = express.Router();
 
-//-----------------------------------------------READ---------------------
+//-----------------------------------------------READ ALL ORDERS---------------------
 router.get(`/`, async (req, res) => {
-  const orderList = await Order.find();
+  const orderList = await Order.find()
+    .populate("user", "name")
+    .sort({ dateOrdered: -1 }); //sort from de newst to olders, without '-1' is reverse
 
-  if (!OrderList) {
+  if (!orderList) {
     res.status(500).json({ succes: false });
   }
-  res.send(OrderList);
+  res.send(orderList);
+});
+
+//-----------------------------------------------READ ONE ORDER by ID---------------------
+router.get(`/:id`, async (req, res) => {
+  const order = await Order.findById(req.params.id)
+    //to get more details about the data inside order (DB Relational)
+    .populate("user", "name")
+    .populate({
+      path: "orderItems",
+      populate: {
+        path: "product",
+        populate: "category",
+      },
+    });
+
+  if (!order) {
+    res.status(500).json({ succes: false });
+  }
+  res.send(order);
 });
 
 //-----------------------------------------------CREATE---------------------
