@@ -96,3 +96,37 @@ module.exports = router;
 "user": "62f56d5846a0aa0b207f4ec7"
 
 }*/
+
+//-----------------------------------------------UPDATE---------------------
+router.put("/:id", async (req, res) => {
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    {
+      status: req.body.status,
+    },
+    { new: true }
+  );
+  if (!order) {
+    res.status(404).json("The order cannot be updated");
+  }
+  res.send(order);
+});
+
+//-----------------------------------------------DELETE---------------------
+router.delete("/:id", (req, res) => {
+  Order.findByIdAndRemove(req.params.id)
+    .then(order => {
+      if (order) {
+        return res
+          .status(200)
+          .json({ success: true, message: "The order is deleted!" });
+      } else {
+        return res
+          .status(404)
+          .json({ success: false, message: "The order is not found!" });
+      }
+    })
+    .catch(err => {
+      return res.status(400).json({ success: false, error: err });
+    });
+});
