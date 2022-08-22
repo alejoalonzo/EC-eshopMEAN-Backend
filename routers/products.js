@@ -4,6 +4,35 @@ const { Category } = require("../models/category");
 const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
+const multer = require("multer");
+
+//-----------------------------------------------STORAGE IMAGES---------------------
+const FILE_TYPE_MAP = {
+  "image/png": "png",
+  "image/jpeg": "jpeg",
+  "image/jpg": "jpg",
+};
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const isValid = FILE_TYPE_MAP[file.mimetype];
+    let uploadError = new Error("Invalid image type");
+
+    if (isValid) {
+      uploadError = null;
+    }
+    cb(uploadError, "public/uploads");
+  },
+  filename: function (req, file, cb) {
+    const fileName = file.originalname.split(" ").join("-"); //replace empty spaces with dashes
+    const extension = FILE_TYPE_MAP[file.mimetype];
+    cb(null, `${fileName}-${Date.now()}.${extension}`);
+    //const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    //cb(null, file.fieldname + '-' + uniqueSuffix)
+  },
+});
+
+const uploadOptions = multer({ storage: storage });
 
 //-----------------------------------------------READ ALL---------------------
 router.get(`/`, async (req, res) => {
@@ -62,17 +91,21 @@ router.get(`/get/featured/:count`, async (req, res) => {
 });
 
 //-----------------------------------------------CREATE---------------------
-router.post(`/`, async (req, res) => {
+router.post(`/`, uploadOptions.single("image"), async (req, res) => {
   let category = await Category.findById(req.body.category);
   if (!category) {
     return res.status(400).send("Invalid category");
   }
+  const fileName = req.file.filename;
+
+  //http://127.0.0.1:3000/api/v1/public/upload
+  const basePath = `${req.protocol}://${req.get("host")}/public/upload`;
 
   let product = new Product({
     name: req.body.name,
     description: req.body.description,
     richDescription: req.body.richDescription,
-    image: req.body.image,
+    image: `${basePath}${fileName}`, //http://127.0.0.1:3000/api/v1/public/upload/image-55625
     brand: req.body.brand,
     price: req.body.price,
     category: req.body.category,
