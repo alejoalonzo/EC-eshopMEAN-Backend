@@ -52,6 +52,24 @@ router.post("/", async (req, res) => {
   const orderItemsIdsResolved = await orderItemsIds;
   // console.log(orderItemsIdsResolved);
 
+  //CALCULATING TOTAL PRICE-------------------------------------------
+  //totalPrices is an Array of totalPrice
+  const totalPrices = await Promise.all(
+    orderItemsIdsResolved.map(async orderItemId => {
+      const orderItem = await OrderItem.findById(orderItemId).populate(
+        "product",
+        "price"
+      );
+      const totalPrice = orderItem.product.price * orderItem.quantity;
+      return totalPrice;
+    })
+  );
+  //console.log(totalPrices);
+
+  //combine every item price and plus element in array
+  const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
+  //--------------------------------------------------------------------
+
   let order = new Order({
     orderItems: orderItemsIdsResolved,
     shippingAddress1: req.body.shippingAddress1,
@@ -61,7 +79,7 @@ router.post("/", async (req, res) => {
     coutry: req.body.coutry,
     phone: req.body.phone,
     status: req.body.status,
-    totalPrice: req.body.totalPrice,
+    totalPrice: totalPrice,
     user: req.body.user,
   });
   order = await order.save();
@@ -110,23 +128,6 @@ router.put("/:id", async (req, res) => {
     res.status(404).json("The order cannot be updated");
   }
   res.send(order);
-});
-
-//-----------------------------------------------UPDATE---------------------
-router.put("/:id", async (req, res) => {
-  const category = await Category.findByIdAndUpdate(
-    req.params.id,
-    {
-      name: req.body.name,
-      icon: req.body.icon,
-      color: req.body.color,
-    },
-    { new: true }
-  );
-  if (!category) {
-    res.status(404).json("The category cannot be updated");
-  }
-  res.send(category);
 });
 
 //-----------------------------------------------DELETE---------------------
