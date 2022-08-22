@@ -92,28 +92,49 @@ router.post("/", async (req, res) => {
 
 module.exports = router;
 
-/*
- {
-"orderItems": [
-    {
-        "quantity": 3,
-        "product": "62f45bf1cc2af3ac0d5f5daa"
-    },
-     {
-        "quantity": 2,
-        "product": "62f549ebd09462b24bff24c1"
-    }
-],
+//-----------------------------------------------GET TOTAL ESHOP SALES------
+router.get("/get/totalsales", async (req, res) => {
+  const totalSales = await Order.aggregate([
+    { $group: { _id: null, totalsales: { $sum: "$totalPrice" } } },
+  ]);
+  if (!totalSales) {
+    return res.status(400).send("The order sales cannot be generated");
+  }
+  res.send({ totalsales: totalSales.pop().totalsales });
+});
 
-"shippingAddress1": "660S Fernado Rd",
-"shippingAddress2": "6589 Broadway Street",
-"city": "Los Angeles",
-"zip": "90065",
-"country": "USA",
-"phone" : "6666456598",
-"user": "62f56d5846a0aa0b207f4ec7"
+//-----------------------------------------------GET COUNTS---------------------
+router.get(`/get/count`, async (req, res) => {
+  const orderCount = await Order.countDocuments()
+    .then(count => {
+      if (count) {
+        return res.status(200).json({ orderCount: count });
+      } else {
+        return res.status(500).json({ succes: false });
+      }
+    })
+    .catch(err => {
+      return res.status(400).json({ succes: false, error: err });
+    });
+});
 
-}*/
+//-----------------------------------------------GET USER ORDERS---------------------
+router.get(`/get/userorders/:userid`, async (req, res) => {
+  const userOrderList = await Order.find({ user: req.params.userid })
+    .populate({
+      path: "orderItems",
+      populate: {
+        path: "product",
+        populate: "category",
+      },
+    })
+    .sort({ dateOrdered: -1 }); //sort from de newst to olders, without '-1' is reverse
+
+  if (!userOrderList) {
+    res.status(500).json({ succes: false });
+  }
+  res.send(userOrderList);
+});
 
 //-----------------------------------------------UPDATE---------------------
 router.put("/:id", async (req, res) => {
