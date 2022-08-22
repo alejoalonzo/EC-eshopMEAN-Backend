@@ -112,11 +112,32 @@ router.put("/:id", async (req, res) => {
   res.send(order);
 });
 
+//-----------------------------------------------UPDATE---------------------
+router.put("/:id", async (req, res) => {
+  const category = await Category.findByIdAndUpdate(
+    req.params.id,
+    {
+      name: req.body.name,
+      icon: req.body.icon,
+      color: req.body.color,
+    },
+    { new: true }
+  );
+  if (!category) {
+    res.status(404).json("The category cannot be updated");
+  }
+  res.send(category);
+});
+
 //-----------------------------------------------DELETE---------------------
 router.delete("/:id", (req, res) => {
   Order.findByIdAndRemove(req.params.id)
-    .then(order => {
+    .then(async order => {
+      //Delete order items inside of Order--------------------
       if (order) {
+        await order.orderItems.map(async orderItem => {
+          await OrderItem.findByIdAndRemove(orderItem);
+        }); //-------------------------------------------------
         return res
           .status(200)
           .json({ success: true, message: "The order is deleted!" });
