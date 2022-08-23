@@ -96,6 +96,12 @@ router.post(`/`, uploadOptions.single("image"), async (req, res) => {
   if (!category) {
     return res.status(400).send("Invalid category");
   }
+
+  const file = req.file;
+  if (!file) {
+    return res.status(400).send("There isnot image in the request");
+  }
+
   const fileName = req.file.filename;
 
   //http://127.0.0.1:3000/api/v1/public/upload
@@ -168,6 +174,42 @@ router.put("/:id", async (req, res) => {
   }
   res.send(product);
 });
+
+//-----------------------------------------------UPLOAD GALLERY IMAGES------
+router.put(
+  "/gallery-images/:id",
+  uploadOptions.array("images", 10), //maximun 10 files in this case
+  async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      res.status(400).send("Invalid product id");
+    }
+
+    const files = req.files;
+    let imagesPaths = [];
+
+    //http://127.0.0.1:3000/api/v1/public/upload
+    const basePath = `${req.protocol}://${req.get("host")}/public/upload`;
+
+    if (files) {
+      files.map(file => {
+        imagesPaths.push(`${basePath}${file.fileName}`);
+      });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        images: imagesPaths,
+      },
+      { new: true }
+    );
+
+    if (!product) {
+      res.status(500).json("The product cannot be updated");
+    }
+    res.send(product);
+  }
+);
 
 //-----------------------------------------------DELETE---------------------
 router.delete("/:id", (req, res) => {
