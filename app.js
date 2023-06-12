@@ -14,7 +14,7 @@ app.options("*", cors());
 
 //Middleware
 app.use(express.json());
-app.use(morgan("tiny"));
+app.use(morgan("tiny")); // to see log in the console
 app.use(authJwt());
 app.use("/public/uploads", express.static(__dirname + "/public/uploads"));
 app.use(errorHandler);
@@ -32,6 +32,7 @@ app.use(`${api}/products`, productsRoutes);
 app.use(`${api}/users`, userRoutes);
 app.use(`${api}/orders`, orderRoutes);
 
+mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.CONNECTION_STRING)
   .then(() => {

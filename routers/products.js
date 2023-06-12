@@ -105,7 +105,7 @@ router.post(`/`, uploadOptions.single("image"), async (req, res) => {
   const fileName = req.file.filename;
 
   //http://127.0.0.1:3000/api/v1/public/upload
-  const basePath = `${req.protocol}://${req.get("host")}/public/upload`;
+  const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
 
   let product = new Product({
     name: req.body.name,
@@ -162,7 +162,7 @@ router.put("/:id", uploadOptions.single("image"), async (req, res) => {
   if (file) {
     const fileName = file.filename;
     //http://127.0.0.1:3000/api/v1/public/upload
-    const basePath = `${req.protocol}://${req.get("host")}/public/upload`;
+    const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
     imagePath = `${basePath}${fileName}`;
   } else {
     imagePath = product.image;
@@ -204,7 +204,7 @@ router.put(
     let imagesPaths = [];
 
     //http://127.0.0.1:3000/api/v1/public/upload
-    const basePath = `${req.protocol}://${req.get("host")}/public/upload`;
+    const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
 
     if (files) {
       files.map(file => {
