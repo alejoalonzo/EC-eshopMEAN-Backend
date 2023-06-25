@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
     name: req.body.name,
     email: req.body.email,
     //For every async operation, we have to await
-    passwordHash: await bcrypt.hashSync(req.body.password, 10),
+    passwordHash: await bcrypt.hashSync(req.body.passwordHash, 10),
     phone: req.body.phone,
     isAdmin: req.body.isAdmin,
     street: req.body.street,

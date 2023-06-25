@@ -6,7 +6,7 @@ const router = express.Router();
 //-----------------------------------------------READ ALL ORDERS---------------------
 router.get(`/`, async (req, res) => {
   const orderList = await Order.find()
-    .populate("user", "name")
+    .populate("user", ["name", "email"])
     .sort({ dateOrdered: -1 }); //sort from de newst to olders, without '-1' is reverse
 
   if (!orderList) {
