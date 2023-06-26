@@ -47,29 +47,6 @@ router.post("/", async (req, res) => {
     name: req.body.name,
     email: req.body.email,
     //For every async operation, we have to await
-    passwordHash: await bcrypt.hashSync(req.body.passwordHash, 10),
-    phone: req.body.phone,
-    isAdmin: req.body.isAdmin,
-    street: req.body.street,
-    number: req.body.number,
-    zip: req.body.zip,
-    city: req.body.city,
-    country: req.body.country,
-  });
-  user = await user.save();
-
-  if (!user) {
-    res.status(404).json("The user cannot be created");
-  }
-  res.send(user);
-});
-
-//-----------------------------------------------REGISTER---------------------
-
-router.post("/register", async (req, res) => {
-  let user = new User({
-    name: req.body.name,
-    email: req.body.email,
     passwordHash: await bcrypt.hashSync(req.body.password, 10),
     phone: req.body.phone,
     isAdmin: req.body.isAdmin,
@@ -95,7 +72,7 @@ router.post("/login", async (req, res) => {
   if (!user) {
     return res.status(400).send("The user not found");
   }
-  if (user && bcrypt.compare(req.body.passwordHash, user.passwordHash)) {
+  if (user && bcrypt.compare(req.body.password, user.passwordHash)) {
     const token = jwt.sign(
       {
         userId: user.id,
@@ -111,6 +88,29 @@ router.post("/login", async (req, res) => {
   } else {
     return res.status(400).send("The password is wrong!");
   }
+});
+
+//-----------------------------------------------REGISTER---------------------
+
+router.post("/register", async (req, res) => {
+  let user = new User({
+    name: req.body.name,
+    email: req.body.email,
+    passwordHash: await bcrypt.hashSync(req.body.password, 10),
+    phone: req.body.phone,
+    isAdmin: req.body.isAdmin,
+    street: req.body.street,
+    number: req.body.number,
+    zip: req.body.zip,
+    city: req.body.city,
+    country: req.body.country,
+  });
+  user = await user.save();
+
+  if (!user) {
+    res.status(404).json("The user cannot be created");
+  }
+  res.send(user);
 });
 
 //-----------------------------------------------UPDATE USER---------------------
