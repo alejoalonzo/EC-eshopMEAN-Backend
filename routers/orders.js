@@ -1,7 +1,9 @@
 const { Order } = require("../models/order");
+const { product, Product } = require("../models/product");
 const { OrderItem } = require("../models/order-item");
 const express = require("express");
 const router = express.Router();
+const stripe = require("stripe")(process.env.CONNECTION_SRIPE);
 
 //-----------------------------------------------READ ALL ORDERS---------------------
 router.get(`/`, async (req, res) => {
@@ -90,7 +92,37 @@ router.post("/", async (req, res) => {
   res.send(order);
 });
 
-module.exports = router;
+//-----------------------------------------------CREATE SESSION STRIPE (PAYMENT)---------------------
+router.post("/create-checkout-session", async (req, res) => {
+  const orderItems = req.body;
+  if (!orderItems) {
+    return res.status(400).send("Checkout session cannot be created");
+  }
+
+  const lineItems = await Promise.all(
+    orderItems.map(async orderItem => {
+      const product = await Product.findById(orderItem.product);
+      return {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: product.name,
+          },
+          unit_amount: product.price * 100,
+        },
+        quantity: orderItem.quantity,
+      };
+    })
+  );
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: lineItems,
+    mode: "payment",
+    success_url: "http://localhost:4200/success",
+    cancel_url: "http://localhost:4200/error",
+  });
+  res.json({ id: session.id });
+});
 
 //-----------------------------------------------GET TOTAL ESHOP SALES------
 router.get("/get/totalsales", async (req, res) => {
@@ -173,3 +205,5 @@ router.delete("/:id", (req, res) => {
       return res.status(400).json({ success: false, error: err });
     });
 });
+
+module.exports = router;
